@@ -11,6 +11,8 @@ DATA_FILE = BASE_DIR / "data" / "election_data.json"
 
 app = Flask(__name__)
 
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
 
@@ -461,6 +463,20 @@ def build_json_fallback(message: str, state: str = "") -> str:
     )
 
 
+def build_chat_messages(history: list, message: str) -> list:
+    messages = []
+    for msg in history[-12:]:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+
+    if not messages or messages[-1].get("content") != message:
+        messages.append({"role": "user", "content": message})
+
+    return messages
+
+
 @app.route("/")
 def index() -> str:
     index_file = BASE_DIR / "index.html"
@@ -502,44 +518,64 @@ def claude_chat() -> tuple:
     if not message:
         return jsonify({"error": "Message is required."}), 400
 
-    # Fallback if no API key
-    if not CLAUDE_API_KEY:
-        return jsonify({"message": build_json_fallback(message, state), "role": "assistant"})
+    # Groq-first, with Claude as a fallback if needed
+    if GROQ_API_KEY:
+        try:
+            from groq import Groq
+
+            client = Groq(api_key=GROQ_API_KEY)
+            system = SYSTEM_PROMPT_TEMPLATE.format(
+                state_context=build_state_context(state)
+            )
+            messages = build_chat_messages(history, message)
+
+            response = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    *messages,
+                ],
+                temperature=0.2,
+                max_tokens=1024,
+            )
+
+            reply = response.choices[0].message.content
+            return jsonify({"message": reply, "role": "assistant"})
+        except ImportError:
+            app.logger.error("Groq SDK is not installed.")
+        except Exception as e:
+            app.logger.error(f"Groq API error: {e}")
+
+    if CLAUDE_API_KEY:
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+
+            system = SYSTEM_PROMPT_TEMPLATE.format(
+                state_context=build_state_context(state)
+            )
+
+            messages = build_chat_messages(history, message)
+
+            response = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=1024,
+                system=system,
+                messages=messages,
+            )
+
+            reply = response.content[0].text
+            return jsonify({"message": reply, "role": "assistant"})
+        except ImportError:
+            app.logger.error("Anthropic SDK is not installed.")
+        except Exception as e:
+            app.logger.error(f"Claude API error: {e}")
 
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
-
-        system = SYSTEM_PROMPT_TEMPLATE.format(
-            state_context=build_state_context(state)
-        )
-
-        messages = []
-        for msg in history[-12:]:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role in ("user", "assistant") and content:
-                messages.append({"role": role, "content": content})
-
-        # Ensure last message isn't duplicated
-        if not messages or messages[-1].get("content") != message:
-            messages.append({"role": "user", "content": message})
-
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=1024,
-            system=system,
-            messages=messages,
-        )
-
-        reply = response.content[0].text
-        return jsonify({"message": reply, "role": "assistant"})
-
-    except ImportError:
         return jsonify({"message": build_json_fallback(message, state), "role": "assistant"})
     except Exception as e:
-        app.logger.error(f"Claude API error: {e}")
+        app.logger.error(f"Chat fallback error: {e}")
         return jsonify({"message": build_json_fallback(message, state), "role": "assistant"})
 
 
