@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Election Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Election Assistant</p>
+      <h1>Clear voting guidance in one simple chat.</h1>
+      <p class="lede">
+        Ask a question, tap a quick topic, and get step-by-step instructions backed by JSON data.
+      </p>
+      <div class="quick-actions" id="quick-actions" aria-label="Quick topics"></div>
+    </section>
+
+    <section class="chat-card" aria-label="Chat interface">
+      <div class="chat-header">
+        <div>
+          <h2>Ask a question</h2>
+          <p>Try registration, voting process, or the election timeline.</p>
+        </div>
+      </div>
+
+      <div class="chat-window" id="chat-window" aria-live="polite" aria-label="Conversation"></div>
+
+      <form class="chat-form" id="chat-form">
+        <label class="sr-only" for="message">Your question</label>
+        <input id="message" name="message" type="text" placeholder="Type your question here..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

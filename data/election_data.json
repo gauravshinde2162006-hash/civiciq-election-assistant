@@ -1,0 +1,50 @@
+{
+  "register_to_vote": {
+    "button_label": "Register to vote",
+    "prompt": "How do I register to vote?",
+    "title": "Register to Vote",
+    "summary": "Complete registration before the deadline so you can vote in the election.",
+    "steps": [
+      "Check that you meet your local eligibility rules.",
+      "Gather any required identification or address documents.",
+      "Submit your registration online, by mail, or in person if allowed.",
+      "Confirm that your registration status is active before election day."
+    ],
+    "details": [
+      "If your name or address changes, update your registration as soon as possible.",
+      "Some places require you to register several weeks before the election."
+    ]
+  },
+  "voting_process": {
+    "button_label": "Voting process",
+    "prompt": "What is the voting process?",
+    "title": "Voting Process",
+    "summary": "Follow these steps to cast a ballot confidently and correctly.",
+    "steps": [
+      "Find your assigned polling place or review your mail-in ballot instructions.",
+      "Bring any required identification or voter materials.",
+      "Review the ballot carefully and mark your choices.",
+      "Submit the ballot according to the instructions provided."
+    ],
+    "details": [
+      "Read the ballot instructions before you start.",
+      "Ask poll workers for help if you are unsure how to proceed."
+    ]
+  },
+  "election_timeline": {
+    "button_label": "Election timeline",
+    "prompt": "Show me the election timeline.",
+    "title": "Election Timeline",
+    "summary": "Use the timeline to plan registration, voting, and follow-up steps.",
+    "steps": [
+      "Review registration deadlines first.",
+      "Check absentee or early voting dates if available.",
+      "Confirm the final election day and polling hours.",
+      "Track any post-election updates or certification dates."
+    ],
+    "details": [
+      "Add the deadlines to your calendar early.",
+      "Verify official election dates with your local election office."
+    ]
+  }
+}

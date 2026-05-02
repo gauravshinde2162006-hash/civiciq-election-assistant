@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Election Assistant Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1a2940;
+      --navy-light: #2c3e50;
+      --parchment: #f5f1e8;
+      --gold: #d4af37;
+      --accent: #5b8cc4;
+      --text-dark: #2c3e50;
+      --text-muted: #7a8a9a;
+      --border-light: #e8dcc8;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --shadow: 0 4px 12px rgba(26, 41, 64, 0.15);
+      --shadow-lg: 0 8px 24px rgba(26, 41, 64, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: linear-gradient(135deg, #f5f1e8 0%, #ebe7dc 100%);
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      height: 100vh;
+      width: 100vw;
+      max-height: 100vh;
+    }
+
+    /* ===== Left Panel: Guided Flow & Eligibility ===== */
+    .left-panel {
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      border: 2px solid var(--border-light);
+      height: 100%;
+      min-height: 0;
+    }
+
+    .flow-title {
+      font-family: "Playfair Display", serif;
+      font-size: 1.3rem;
+      color: var(--navy);
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .flow-section {
+      margin-bottom: 20px;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .flow-question {
+      font-size: 0.95rem;
+      color: var(--navy);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flow-btn {
+      padding: 10px 16px;
+      border: 2px solid var(--navy);
+      background: white;
+      color: var(--navy);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .flow-btn:hover {
+      background: var(--navy);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .flow-btn.active {
+      background: var(--navy);
+      color: white;
+    }
+
+    /* ===== Eligibility Checker ===== */
+    .eligibility-card {
+      background: linear-gradient(135deg, var(--parchment) 0%, #f0eae0 100%);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .eligibility-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .eligibility-input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .eligibility-input {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--border-light);
+      border-radius: 6px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 1rem;
+    }
+
+    .eligibility-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    }
+
+    .eligibility-check-btn {
+      padding: 10px 14px;
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .eligibility-check-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+    }
+
+    .eligibility-result {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .eligibility-result.show {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .eligibility-result.eligible {
+      background: rgba(46, 204, 113, 0.1);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .eligibility-result.preregister {
+      background: rgba(243, 156, 18, 0.1);
+      color: var(--warning);
+      border-left: 4px solid var(--warning);
+    }
+
+    .eligibility-result.ineligible {
+      background: rgba(149, 165, 166, 0.1);
+      color: #7f8c8d;
+      border-left: 4px solid #95a5a6;
+    }
+
+    /* ===== Center Panel: Chat ===== */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      border: 2px solid var(--border-light);
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+    }
+
+    .chat-header-title {
+      font-family: "Playfair Display", serif;
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+    }
+
+    .chat-header-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .state-selector-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--navy);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .disclaimer {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      font-size: 0.8rem;
+      color: #856404;
+      text-align: center;
+      border-radius: 4px;
+    }
+
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: white;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--navy);
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .message.user .message-avatar {
+      background: var(--accent);
+      color: white;
+      order: 2;
+    }
+
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      line-height: 1.5;
+    }
+
+    .message.assistant .message-content {
+      background: var(--parchment);
+      color: var(--text-dark);
+      border-left: 4px solid var(--gold);
+    }
+
+    .message.user .message-content {
+      background: var(--navy);
+      color: white;
+      border-radius: 12px 4px 12px 12px;
+    }
+
+    .message-content h3 {
+      font-family: "Playfair Display", serif;
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: inherit;
+    }
+
+    .message-content p {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .message-content ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .message-content li {
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: bounce 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%,
+      80%,
+      100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .followup-chips {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .chip:hover {
+      background: #4a7ba7;
+      transform: translateY(-1px);
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      border-top: 2px solid var(--border-light);
+      background: #fafaf8;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid var(--border-light);
+      border-radius: 8px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    }
+
+    .send-btn {
+      padding: 12px 20px;
+      background: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .send-btn:hover {
+      background: var(--navy-light);
+      transform: translateY(-2px);
+    }
+
+    .send-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ===== Right Panel: Countdown & Quick Topics ===== */
+    .right-panel {
+      display: flex;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .countdown-strip {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--gold);
+      flex-shrink: 0;
+    }
+
+    .countdown-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      opacity: 0.9;
+    }
+
+    .countdown-display {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .countdown-unit {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .countdown-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: "DM Sans", sans-serif;
+      color: var(--gold);
+    }
+
+    .countdown-label-unit {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .topics-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      border: 2px solid var(--border-light);
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topics-title {
+      font-family: "Playfair Display", serif;
+      font-size: 1.1rem;
+      color: var(--navy);
+      margin-bottom: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .topics-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .topic-btn {
+      padding: 12px;
+      background: var(--parchment);
+      border: 2px solid var(--border-light);
+      color: var(--navy);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-align: left;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .topic-btn:hover {
+      border-color: var(--gold);
+      background: white;
+      transform: translateX(4px);
+    }
+
+    .state-selector-panel {
+      background: white;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      border: 2px solid var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .state-selector-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .state-selector-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid var(--border-light);
+      border-radius: 6px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.95rem;
+    }
+
+    .state-selector-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    }
+
+    /* ===== Responsive Design ===== */
+    @media (max-width: 1400px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .right-panel {
+        flex-direction: row;
+        height: auto;
+        min-height: auto;
+      }
+
+      .message-content {
+        max-width: 85%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 10px;
+        padding: 10px;
+        width: 100%;
+      }
+
+      .left-panel,
+      .center-panel,
+      .right-panel {
+        height: auto;
+        min-height: 300px;
+        max-height: none;
+      }
+
+      .countdown-display {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .message-content {
+        max-width: 100%;
+      }
+    }
+
+    .scroll-hidden::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scroll-hidden::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scroll-hidden::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 3px;
+    }
+
+    .scroll-hidden::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- LEFT PANEL: Guided Flow & Eligibility -->
+    <div class="left-panel scroll-hidden">
+      <div class="flow-title">✓ Quick Start</div>
+
+      <!-- Registration Flow -->
+      <div class="flow-section">
+        <div class="flow-question">Are you registered to vote?</div>
+        <div class="button-group">
+          <button class="flow-btn" onclick="window.handleRegistrationFlow('yes')">Yes</button>
+          <button class="flow-btn" onclick="window.handleRegistrationFlow('no')">No</button>
+      
+        </div>
+      </div>
+
+      <!-- Registration State Content -->
+      <div id="registration-content" style="display: none">
+        <div class="flow-section">
+          <div class="flow-question">What would you like to do?</div>
+          <div class="button-group" style="flex-direction: column">
+            <button class="flow-btn" style="text-align: left" onclick="window.sendMessage('Find my polling place')">
+              📍 Find polling place
+            </button>
+            <button class="flow-btn" style="text-align: left" onclick="window.sendMessage('Check my ballot')">
+              🗳️ Check my ballot
+            </button>
+            <button class="flow-btn" style="text-align: left" onclick="window.sendMessage('Voting requirements')">
+              📋 Voting requirements
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eligibility Checker -->
+      <div class="eligibility-card">
+        <div class="eligibility-label">Eligibility Checker</div>
+        <div class="eligibility-input-group">
+          <input type="number" class="eligibility-input" id="age-input" placeholder="Your age" min="0" max="150" />
+          <button class="eligibility-check-btn" onclick="window.checkEligibility()">Check</button>
+        </div>
+        <div id="eligibility-result" class="eligibility-result"></div>
+      </div>
+    </div>
+
+    <!-- CENTER PANEL: Chat -->
+    <div class="center-panel">
+      <div class="chat-header">
+        <div class="chat-header-title">🗳️ Election Assistant</div>
+        <div class="chat-header-subtitle">Your nonpartisan voting guide</div>
+        <div class="state-selector-badge" id="state-badge" style="display: none">
+          📍 <span id="state-display">Select State</span>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        ✓ Nonpartisan • All information based on official election data • Updated regularly
+      </div>
+
+      <div class="chat-window scroll-hidden" id="chat-window"></div>
+
+      <div class="chat-input-area">
+        <input
+          type="text"
+          class="chat-input"
+          id="message-input"
+          placeholder="Ask about registration, voting, or deadlines..."
+          onkeypress="window.handleKeyPress(event)"
+        />
+        <button class="send-btn" onclick="window.sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Countdown & Topics -->
+    <div class="right-panel scroll-hidden">
+      <!-- Election Countdown -->
+      <div class="countdown-strip">
+        <div class="countdown-label">⏱️ To the 2026 Midterms</div>
+        <div class="countdown-display">
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-days">0</div>
+            <div class="countdown-label-unit">Days</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-hours">0</div>
+            <div class="countdown-label-unit">Hours</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-minutes">0</div>
+            <div class="countdown-label-unit">Mins</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-seconds">0</div>
+            <div class="countdown-label-unit">Secs</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State Selector -->
+      <div class="state-selector-panel">
+        <div class="state-selector-label">Select Your State</div>
+        <input
+          type="text"
+          class="state-selector-input"
+          id="state-input"
+          placeholder="e.g., California"
+          onchange="window.updateState(this.value)"
+        />
+      </div>
+
+      <!-- Quick Topics -->
+      <div class="topics-card">
+        <div class="topics-title">💡 Quick Topics</div>
+        <div class="topics-list">
+          <button class="topic-btn" onclick="window.sendMessage('How do I register to vote?')">
+            📝 Register to Vote
+          </button>
+          <button class="topic-btn" onclick="window.sendMessage('What is the voting process?')">
+            🗳️ Voting Process
+          </button>
+          <button class="topic-btn" onclick="window.sendMessage('Show me the election timeline')">
+            📅 Election Timeline
+          </button>
+          <button class="topic-btn" onclick="window.sendMessage('What ID do I need?')">
+            🆔 Voter ID Requirements
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      currentState: null,
+      conversationHistory: [],
+      registrationState: null,
+      isLoading: false,
+      useClaudeAPI: true, // Toggle for Claude vs. JSON fallback
+    };
+
+    const chatTranscript = [];
+    const CHAT_STORAGE_KEY = "civiciq_chat_transcript";
+    let isRestoringTranscript = false;
+
+    function saveChatTranscript() {
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatTranscript));
+      } catch (err) {
+        console.warn("Unable to save chat transcript", err);
+      }
+    }
+
+    function loadChatTranscript() {
+      try {
+        const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+        if (!raw) {
+          return [];
+        }
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        console.warn("Unable to load chat transcript", err);
+        return [];
+      }
+    }
+
+    function isNearBottom(element, threshold = 80) {
+      return element.scrollHeight - element.scrollTop - element.clientHeight <= threshold;
+    }
+
+    function scrollToBottom(element) {
+      element.scrollTop = element.scrollHeight;
+    }
+
+    const SUPPORTED_STATES = {
+      "alabama": "Alabama", "al": "Alabama",
+      "alaska": "Alaska", "ak": "Alaska",
+      "arizona": "Arizona", "az": "Arizona",
+      "arkansas": "Arkansas", "ar": "Arkansas",
+      "california": "California", "ca": "California",
+      "colorado": "Colorado", "co": "Colorado",
+      "connecticut": "Connecticut", "ct": "Connecticut",
+      "delaware": "Delaware", "de": "Delaware",
+      "florida": "Florida", "fl": "Florida",
+      "georgia": "Georgia", "ga": "Georgia",
+      "hawaii": "Hawaii", "hi": "Hawaii",
+      "idaho": "Idaho", "id": "Idaho",
+      "illinois": "Illinois", "il": "Illinois",
+      "indiana": "Indiana", "in": "Indiana",
+      "iowa": "Iowa", "ia": "Iowa",
+      "kansas": "Kansas", "ks": "Kansas",
+      "kentucky": "Kentucky", "ky": "Kentucky",
+      "louisiana": "Louisiana", "la": "Louisiana",
+      "maine": "Maine", "me": "Maine",
+      "maryland": "Maryland", "md": "Maryland",
+      "massachusetts": "Massachusetts", "ma": "Massachusetts",
+      "michigan": "Michigan", "mi": "Michigan",
+      "minnesota": "Minnesota", "mn": "Minnesota",
+      "mississippi": "Mississippi", "ms": "Mississippi",
+      "missouri": "Missouri", "mo": "Missouri",
+      "montana": "Montana", "mt": "Montana",
+      "nebraska": "Nebraska", "ne": "Nebraska",
+      "nevada": "Nevada", "nv": "Nevada",
+      "new hampshire": "New Hampshire", "nh": "New Hampshire",
+      "new jersey": "New Jersey", "nj": "New Jersey",
+      "new mexico": "New Mexico", "nm": "New Mexico",
+      "new york": "New York", "ny": "New York",
+      "north carolina": "North Carolina", "nc": "North Carolina",
+      "north dakota": "North Dakota", "nd": "North Dakota",
+      "ohio": "Ohio", "oh": "Ohio",
+      "oklahoma": "Oklahoma", "ok": "Oklahoma",
+      "oregon": "Oregon", "or": "Oregon",
+      "pennsylvania": "Pennsylvania", "pa": "Pennsylvania",
+      "rhode island": "Rhode Island", "ri": "Rhode Island",
+      "south carolina": "South Carolina", "sc": "South Carolina",
+      "south dakota": "South Dakota", "sd": "South Dakota",
+      "tennessee": "Tennessee", "tn": "Tennessee",
+      "texas": "Texas", "tx": "Texas",
+      "utah": "Utah", "ut": "Utah",
+      "vermont": "Vermont", "vt": "Vermont",
+      "virginia": "Virginia", "va": "Virginia",
+      "washington": "Washington", "wa": "Washington",
+      "west virginia": "West Virginia", "wv": "West Virginia",
+      "wisconsin": "Wisconsin", "wi": "Wisconsin",
+      "wyoming": "Wyoming", "wy": "Wyoming",
+      "district of columbia": "District of Columbia", "dc": "District of Columbia",
+      "andhra pradesh": "Andhra Pradesh", "ap": "Andhra Pradesh",
+      "arunachal pradesh": "Arunachal Pradesh", "ar": "Arunachal Pradesh",
+      "assam": "Assam",
+      "bihar": "Bihar",
+      "chhattisgarh": "Chhattisgarh", "cg": "Chhattisgarh",
+      "goa": "Goa",
+      "gujarat": "Gujarat",
+      "haryana": "Haryana",
+      "himachal pradesh": "Himachal Pradesh", "hp": "Himachal Pradesh",
+      "jharkhand": "Jharkhand",
+      "karnataka": "Karnataka", "ka": "Karnataka",
+      "kerala": "Kerala", "kl": "Kerala",
+      "madhya pradesh": "Madhya Pradesh", "mp": "Madhya Pradesh",
+      "maharashtra": "Maharashtra", "mh": "Maharashtra",
+      "manipur": "Manipur",
+      "meghalaya": "Meghalaya",
+      "mizoram": "Mizoram",
+      "nagaland": "Nagaland",
+      "odisha": "Odisha", "orissa": "Odisha", "od": "Odisha",
+      "punjab": "Punjab",
+      "rajasthan": "Rajasthan",
+      "sikkim": "Sikkim",
+      "tamil nadu": "Tamil Nadu", "tn": "Tamil Nadu",
+      "telangana": "Telangana", "tg": "Telangana",
+      "tripura": "Tripura",
+      "uttar pradesh": "Uttar Pradesh", "up": "Uttar Pradesh",
+      "uttarakhand": "Uttarakhand", "uk": "Uttarakhand",
+      "west bengal": "West Bengal", "wb": "West Bengal",
+      "andaman and nicobar islands": "Andaman and Nicobar Islands",
+      "chandigarh": "Chandigarh",
+      "dadra and nagar haveli and daman and diu": "Dadra and Nagar Haveli and Daman and Diu",
+      "delhi": "Delhi", "nct of delhi": "Delhi", "national capital territory of delhi": "Delhi",
+      "jammu and kashmir": "Jammu and Kashmir", "jk": "Jammu and Kashmir",
+      "ladakh": "Ladakh",
+      "lakshadweep": "Lakshadweep",
+      "puducherry": "Puducherry", "pondicherry": "Puducherry",
+    };
+
+    function normalizeStateName(stateName) {
+      const key = (stateName || "").trim().toLowerCase();
+      return SUPPORTED_STATES[key] || "";
+    }
+
+    // ===== Countdown Timer =====
+    function updateCountdown() {
+      const electionDate = new Date("2026-11-03T00:00:00").getTime();
+      const now = new Date().getTime();
+      const distance = electionDate - now;
+
+      if (distance < 0) {
+        document.getElementById("countdown-days").textContent = "Election";
+        document.getElementById("countdown-hours").textContent = "Has";
+        document.getElementById("countdown-minutes").textContent = "Passed!";
+        document.getElementById("countdown-seconds").textContent = "🗳️";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("countdown-days").textContent = days;
+      document.getElementById("countdown-hours").textContent = hours;
+      document.getElementById("countdown-minutes").textContent = minutes;
+      document.getElementById("countdown-seconds").textContent = seconds;
+    }
+
+    // Update countdown every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // ===== Eligibility Checker =====
+    function checkEligibility() {
+      const ageInput = document.getElementById("age-input");
+      const age = parseInt(ageInput.value);
+      const resultDiv = document.getElementById("eligibility-result");
+
+      if (isNaN(age) || age < 0) {
+        resultDiv.textContent = "Please enter a valid age.";
+        resultDiv.className = "eligibility-result show ineligible";
+        return;
+      }
+
+      let result, className;
+
+      if (age >= 18) {
+        result = "✓ You are eligible to vote! Register today and cast your ballot.";
+        className = "eligible";
+      } else if (age >= 16) {
+        result =
+          "🎓 Pre-register now! You can vote when you turn 18. Check your state's pre-registration options.";
+        className = "preregister";
+      } else {
+        result =
+          "😊 Not quite yet, but stay civically engaged! Learn about voting now so you're ready at 18.";
+        className = "ineligible";
+      }
+
+      resultDiv.textContent = result;
+      resultDiv.className = `eligibility-result show ${className}`;
+    }
+
+    // ===== Registration Flow =====
+    function handleRegistrationFlow(answer) {
+      state.registrationState = answer;
+      const contentDiv = document.getElementById("registration-content");
+
+      if (answer === "yes") {
+        contentDiv.style.display = "block";
+        addMessage(
+          "Great! You're registered. Now let's help you prepare to vote.",
+          "assistant"
+        );
+      } else {
+        contentDiv.style.display = "none";
+        sendMessage("I'm not registered to vote. Help me register.");
+      }
+    }
+
+    // ===== State Selection =====
+    function updateState(stateName) {
+      const normalizedState = normalizeStateName(stateName);
+
+      if (!normalizedState) {
+        state.currentState = null;
+        document.getElementById("state-badge").style.display = "none";
+        document.getElementById("state-display").textContent = "General US guidance";
+        addMessage(
+          "I don’t recognize that location as a supported state or union territory yet. I can still help with general election guidance, or you can choose a U.S. state or an Indian state for personalized details.",
+          "assistant"
+        );
+        return;
+      }
+
+      state.currentState = normalizedState;
+
+      if (state.currentState) {
+        document.getElementById("state-badge").style.display = "inline-block";
+        document.getElementById("state-display").textContent = state.currentState;
+
+        // Add system message
+        addMessage(
+          `📍 I've set your location to ${state.currentState}. I'll tailor all election information to your state.`,
+          "assistant"
+        );
+      }
+    }
+
+    // ===== Chat Functionality =====
+    function ensureChatWindow() {
+      let chatWindow = document.getElementById("chat-window");
+      if (chatWindow) {
+        return chatWindow;
+      }
+
+      const centerPanel = document.querySelector(".center-panel");
+      const inputArea = document.querySelector(".chat-input-area");
+
+      if (!centerPanel || !inputArea) {
+        return null;
+      }
+
+      chatWindow = document.createElement("div");
+      chatWindow.className = "chat-window scroll-hidden";
+      chatWindow.id = "chat-window";
+      centerPanel.insertBefore(chatWindow, inputArea);
+      return chatWindow;
+    }
+
+    function addMessage(content, role = "user", followupQuestions = []) {
+      const chatWindow = ensureChatWindow();
+
+      // Defensive check - if chat window doesn't exist, return early
+      if (!chatWindow) {
+        console.error("Chat window element not found!");
+        return;
+      }
+      
+      const messageEl = document.createElement("div");
+      messageEl.className = `message ${role}`;
+
+      let avatar = role === "assistant" ? "🗳️" : "👤";
+
+      const messageContent = document.createElement("div");
+      messageContent.className = "message-content";
+      const shouldStickToBottom = isNearBottom(chatWindow);
+
+      // Parse content for formatting
+      if (role === "assistant") {
+        // Simple markdown-like parsing
+        let html = content
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\n/g, "<br>");
+
+        // Check for follow-up question chips
+        const chipRegex = /\[(.*?)\]/g;
+        const chips = [];
+        let chipMatch;
+
+        while ((chipMatch = chipRegex.exec(content)) !== null) {
+          chips.push(chipMatch[1]);
+        }
+
+        // Remove chips from display text
+        html = html.replace(/\[(.*?)\]/g, "").trim();
+        messageContent.innerHTML = `<p>${html}</p>`;
+
+        // Add follow-up chips
+        if (chips.length > 0 || followupQuestions.length > 0) {
+          const chipsToShow = chips.length > 0 ? chips : followupQuestions;
+          const chipsDiv = document.createElement("div");
+          chipsDiv.className = "followup-chips";
+
+          chipsToShow.slice(0, 2).forEach((question) => {
+            const chip = document.createElement("button");
+            chip.className = "chip";
+            chip.textContent = question;
+            chip.onclick = () => sendMessage(question);
+            chipsDiv.appendChild(chip);
+          });
+
+          messageContent.appendChild(chipsDiv);
+        }
+      } else {
+        messageContent.textContent = content;
+      }
+
+      messageEl.innerHTML = `<div class="message-avatar">${avatar}</div>`;
+      messageEl.appendChild(messageContent);
+
+      chatWindow.appendChild(messageEl);
+      if (shouldStickToBottom) {
+        scrollToBottom(chatWindow);
+      }
+
+      if (!isRestoringTranscript) {
+        chatTranscript.push({
+          role,
+          content,
+        });
+        saveChatTranscript();
+      }
+    }
+
+    function showTypingIndicator() {
+      const chatWindow = ensureChatWindow();
+      if (!chatWindow) {
+        return;
+      }
+      const shouldStickToBottom = isNearBottom(chatWindow);
+      const messageEl = document.createElement("div");
+      messageEl.className = "message assistant";
+      messageEl.innerHTML = `
+        <div class="message-avatar">🗳️</div>
+        <div class="typing-indicator" id="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      chatWindow.appendChild(messageEl);
+      if (shouldStickToBottom) {
+        scrollToBottom(chatWindow);
+      }
+    }
+
+    function removeTypingIndicator() {
+      const typingIndicator = document.getElementById("typing-indicator");
+      if (typingIndicator) {
+        typingIndicator.parentElement.parentElement.remove();
+      }
+    }
+
+    async function sendMessage(messageText = null) {
+      const input = messageText || document.getElementById("message-input").value.trim();
+
+      if (!input) return;
+
+      // Clear input if not provided as parameter
+      if (!messageText) {
+        document.getElementById("message-input").value = "";
+      }
+
+      state.isLoading = true;
+      
+      // Try to add user message
+      const chatWindow = document.getElementById("chat-window");
+      if (chatWindow) {
+        addMessage(input, "user");
+        showTypingIndicator();
+      } else {
+        console.error("Chat window not found when trying to send message");
+        return;
+      }
+
+      state.conversationHistory.push({
+        role: "user",
+        content: input,
+      });
+
+      try {
+        // Try Claude API first
+        const response = await fetch("/api/claude-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: input,
+            state: state.currentState || "",
+            conversation_history: state.conversationHistory,
+          }),
+        });
+
+        removeTypingIndicator();
+
+        if (response.ok) {
+          const data = await response.json();
+          addMessage(data.message, "assistant");
+
+          state.conversationHistory.push({
+            role: "assistant",
+            content: data.message,
+          });
+        } else {
+          const error = await response.json();
+          addMessage(
+            `Error: ${error.error || "Unable to get a response. Try a different question."}`,
+            "assistant"
+          );
+        }
+      } catch (err) {
+        removeTypingIndicator();
+        addMessage(
+          `Connection error. Make sure the Flask server is running with: python app.py. Error: ${err.message}`,
+          "assistant"
+        );
+      }
+
+      state.isLoading = false;
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // ===== Initialize =====
+    function initializeChat() {
+      ensureChatWindow();
+      const savedTranscript = loadChatTranscript();
+
+      if (savedTranscript.length > 0) {
+        chatTranscript.length = 0;
+        isRestoringTranscript = true;
+        try {
+          savedTranscript.forEach((entry) => {
+            chatTranscript.push(entry);
+            addMessage(entry.content, entry.role);
+          });
+        } finally {
+          isRestoringTranscript = false;
+        }
+        const chatWindow = ensureChatWindow();
+        if (chatWindow) {
+          scrollToBottom(chatWindow);
+        }
+        return;
+      }
+
+      addMessage(
+        "Welcome to the Election Assistant! 🗳️ I'm here to help you navigate voter registration, voting procedures, and election information. Which state are you in?",
+        "assistant"
+      );
+      const chatWindow = ensureChatWindow();
+      if (chatWindow) {
+        scrollToBottom(chatWindow);
+      }
+    }
+
+    // Wrap functions properly for onclick handlers
+    window.sendMessage = sendMessage;
+    window.handleKeyPress = handleKeyPress;
+    window.updateState = updateState;
+    window.handleRegistrationFlow = handleRegistrationFlow;
+    window.checkEligibility = checkEligibility;
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeChat);
+    } else {
+      initializeChat();
+    }
+  </script>
+</body>
+</html>
